@@ -312,6 +312,135 @@
                 pointer-events: none;
             }
         }
+
+        /* Modal Popup Styles */
+        #itemModal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border: 3px solid #654321;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #FFD700;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.2);
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-label {
+            font-weight: bold;
+            color: #FFD700;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .modal-value {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #fff;
+            margin-left: 10px;
+        }
+
+        .modal-button {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border: none;
+            color: #333;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+
+        .modal-button:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 20% auto;
+                padding: 20px;
+                border: 2px solid #654321;
+            }
+
+            .modal-header {
+                font-size: 22px;
+                margin-bottom: 15px;
+            }
+
+            .modal-value {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -319,6 +448,39 @@
     <canvas id="canvas"></canvas>
     <div id="title">UHHD NATION</div>
     <div id="loading">Loading experience...</div>
+    
+    <!-- Product Details Modal -->
+    <div id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalItemName">Product Name</span>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-section">
+                <label class="modal-label">💰 Price</label>
+                <div class="modal-value" id="modalPrice">N/A</div>
+            </div>
+            
+            <div class="modal-section">
+                <label class="modal-label">📊 Stock Status</label>
+                <div class="modal-value" id="modalStock">N/A</div>
+            </div>
+            
+            <div class="modal-section">
+                <label class="modal-label">📝 Description</label>
+                <div class="modal-value" id="modalDescription">No description available</div>
+            </div>
+            
+            <div class="modal-section" id="detailsSection" style="display:none;">
+                <label class="modal-label">ℹ️ Details</label>
+                <div class="modal-value" id="modalDetails"></div>
+            </div>
+            
+            <button class="modal-button" onclick="addToCart()">✓ Add to Cart</button>
+        </div>
+    </div>
+    
     <div id="itemsContainer">
         <div class="items-grid" id="itemsGrid"></div>
     </div>
@@ -510,26 +672,60 @@
                 const sheetData = googleSheetData[item.name];
                 
                 if (sheetData && sheetData.name) {
-                    // Display all data from Google Sheet with proper formatting
-                    let message = `📦 ${sheetData.name}\n`;
-                    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-                    message += `💰 Price: ${sheetData.price}\n`;
-                    message += `📊 Stock: ${sheetData.stock}\n\n`;
-                    message += `Description:\n${sheetData.description}`;
+                    // Populate modal with Google Sheet data
+                    document.getElementById('modalItemName').textContent = sheetData.name;
+                    document.getElementById('modalPrice').textContent = sheetData.price;
+                    document.getElementById('modalStock').textContent = sheetData.stock;
+                    document.getElementById('modalDescription').textContent = sheetData.description;
                     
-                    if (sheetData.details) {
-                        message += `\n\nDetails:\n${sheetData.details}`;
+                    // Show or hide details section based on whether there are details
+                    const detailsSection = document.getElementById('detailsSection');
+                    if (sheetData.details && sheetData.details.trim()) {
+                        document.getElementById('modalDetails').textContent = sheetData.details;
+                        detailsSection.style.display = 'block';
+                    } else {
+                        detailsSection.style.display = 'none';
                     }
                     
-                    message += `\n\n✓ Added to cart!`;
-                    alert(message);
+                    // Open modal
+                    openModal();
                 } else {
-                    // Fallback if item not found in sheet
-                    alert(`${item.name}\n\nAdded to cart!`);
+                    // Fallback - show with item name only
+                    document.getElementById('modalItemName').textContent = item.name;
+                    document.getElementById('modalPrice').textContent = item.price;
+                    document.getElementById('modalStock').textContent = 'In stock';
+                    document.getElementById('modalDescription').textContent = 'Product details available in Google Sheet';
+                    document.getElementById('detailsSection').style.display = 'none';
+                    openModal();
                 }
             });
             itemsGrid.appendChild(itemBlock);
         });
+
+        // Modal Functions
+        function openModal() {
+            document.getElementById('itemModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').style.display = 'none';
+        }
+
+        function addToCart() {
+            const itemName = document.getElementById('modalItemName').textContent;
+            closeModal();
+            // You can add custom callback here, e.g., send to backend
+            console.log(`Added ${itemName} to cart`);
+        }
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('itemModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
         function animate() {
             requestAnimationFrame(animate);
 
