@@ -401,19 +401,48 @@
                 const response = await fetch(GOOGLE_SHEET_URL);
                 const csvText = await response.text();
                 const lines = csvText.trim().split('\n');
-                const headers = lines[0].split(',').map(h => h.trim());
                 
-                // Parse CSV data into object
+                // Parse CSV with proper handling of quoted fields
+                function parseCSVLine(line) {
+                    const result = [];
+                    let current = '';
+                    let insideQuotes = false;
+                    
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        const nextChar = line[i + 1];
+                        
+                        if (char === '"') {
+                            if (insideQuotes && nextChar === '"') {
+                                current += '"';
+                                i++;
+                            } else {
+                                insideQuotes = !insideQuotes;
+                            }
+                        } else if (char === ',' && !insideQuotes) {
+                            result.push(current.trim());
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    result.push(current.trim());
+                    return result;
+                }
+                
+                // Skip header row and parse data
                 for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',').map(v => v.trim());
-                    if (values[0]) { // Check if item name exists
-                        const itemName = values[0];
+                    if (lines[i].trim() === '') continue;
+                    
+                    const values = parseCSVLine(lines[i]);
+                    if (values[0]) {
+                        const itemName = values[0].replace(/"/g, '');
                         googleSheetData[itemName] = {
-                            name: values[0],
-                            price: values[1] || 'N/A',
-                            description: values[2] || 'No description available',
-                            stock: values[3] || 'In stock',
-                            details: values[4] || ''
+                            name: values[0].replace(/"/g, ''),
+                            price: (values[1] || 'N/A').replace(/"/g, ''),
+                            description: (values[2] || 'No description available').replace(/"/g, ''),
+                            stock: (values[3] || 'In stock').replace(/"/g, ''),
+                            details: (values[4] || '').replace(/"/g, '')
                         };
                     }
                 }
@@ -477,16 +506,26 @@
                 <div class="item-price">${item.price}</div>
             `;
             itemBlock.addEventListener('click', () => {
-                // Get data from Google Sheet or use default
+                // Get data from Google Sheet by item name
                 const sheetData = googleSheetData[item.name];
                 
-                if (sheetData) {
-                    // Display data from Google Sheet
-                    const details = `${sheetData.name}\n\nPrice: ${sheetData.price}\nStock: ${sheetData.stock}\n\nDescription:\n${sheetData.description}${sheetData.details ? '\n\n' + sheetData.details : ''}\n\nAdded to cart!`;
-                    alert(details);
+                if (sheetData && sheetData.name) {
+                    // Display all data from Google Sheet with proper formatting
+                    let message = `📦 ${sheetData.name}\n`;
+                    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+                    message += `💰 Price: ${sheetData.price}\n`;
+                    message += `📊 Stock: ${sheetData.stock}\n\n`;
+                    message += `Description:\n${sheetData.description}`;
+                    
+                    if (sheetData.details) {
+                        message += `\n\nDetails:\n${sheetData.details}`;
+                    }
+                    
+                    message += `\n\n✓ Added to cart!`;
+                    alert(message);
                 } else {
-                    // Fallback to default alert
-                    alert(`Added ${item.name} to cart!`);
+                    // Fallback if item not found in sheet
+                    alert(`${item.name}\n\nAdded to cart!`);
                 }
             });
             itemsGrid.appendChild(itemBlock);
