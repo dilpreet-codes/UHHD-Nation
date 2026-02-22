@@ -636,7 +636,7 @@
             itemBlock.innerHTML = `
                 <img src="${item.image}" alt="${item.name}" class="item-icon" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect fill=%22%238B4513%22 width=%2264%22 height=%2264%22/><text x=%2232%22 y=%2240%22 font-size=%2224%22 text-anchor=%22middle%22 fill=%22white%22>?</text></svg>'" />
                 <div class="item-name">${item.name}</div>
-                <div class="item-price">${item.price}</div>
+                
             `;
             itemBlock.addEventListener('click', () => {
                 // Get data from Google Sheet by item name
