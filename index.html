@@ -22,6 +22,7 @@
             display: block;
             width: 100%;
             height: 100vh;
+            pointer-events: none;
         }
 
         #title {
@@ -330,8 +331,8 @@
                 if (elapsed < duration) {
                     // Move cookie from right to left
                     cookie.position.x = 15 - (elapsed / duration) * 30;
-                    // Rotate cookie for rolling effect (rolling like a wheel)
-                    cookie.rotation.y += 0.1;
+                    // Rotate cookie for rolling effect (rolling along x axis)
+                    cookie.rotation.x += 0.1;
                 } else {
                     // Keep cookie off screen after animation
                     cookie.position.x = -15;
@@ -357,10 +358,12 @@
         let touchStartY = 0;
 
         // Mouse wheel scroll
-        window.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            scrollOffset += e.deltaY * 0.5;
-            updateScrollPosition();
+        document.addEventListener('wheel', (e) => {
+            if (e.target.closest('#itemsContainer') || itemsContainer.style.opacity === '1') {
+                e.preventDefault();
+                scrollOffset += e.deltaY * 0.5;
+                updateScrollPosition();
+            }
         }, { passive: false });
 
         // Touch swipe handling
