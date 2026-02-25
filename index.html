@@ -467,11 +467,6 @@
                 <div class="modal-value" id="modalStock">N/A</div>
             </div>
             
-            <div class="modal-section" id="descriptionSection" style="display:none;">
-                <label class="modal-label">📝 Description</label>
-                <div class="modal-value" id="modalDescription">No description available</div>
-            </div>
-            
             <div class="modal-section" id="detailsSection" style="display:none;">
                 <label class="modal-label">ℹ️ Details</label>
                 <div class="modal-value" id="modalDetails"></div>
@@ -599,90 +594,91 @@
                         const itemName = values[0].replace(/"/g, '');
                         googleSheetData[itemName] = {
                             name: values[0].replace(/"/g, ''),
-                            price: (values[1] || 'N/A').replace(/"/g, ''),
-                            description: (values[2] || 'No description available').replace(/"/g, ''),
+                            image: (values[1] || '').replace(/"/g, ''),
+                            price: (values[2] || 'N/A').replace(/"/g, ''),
                             stock: (values[3] || 'In stock').replace(/"/g, ''),
                             details: (values[4] || '').replace(/"/g, '')
                         };
                     }
                 }
                 console.log('Google Sheet data loaded:', googleSheetData);
+                populateItemsGrid();
             } catch (error) {
                 console.log('Could not load Google Sheet (normal if sheet is private). Using default data.');
+                populateItemsGrid();
             }
+        }
+
+        // Populate items grid from Google Sheet data
+        function populateItemsGrid() {
+            // Build items array from googleSheetData
+            const items = Object.values(googleSheetData).map(data => ({
+                image: data.image,
+                name: data.name
+            }));
+
+            // Populate items grid
+            const itemsGrid = document.getElementById('itemsGrid');
+            items.forEach(item => {
+        // Populate items grid from Google Sheet data
+        function populateItemsGrid() {
+            // Build items array from googleSheetData
+            const items = Object.values(googleSheetData).map(data => ({
+                image: data.image,
+                name: data.name
+            }));
+
+            // Populate items grid
+            const itemsGrid = document.getElementById('itemsGrid');
+            itemsGrid.innerHTML = ''; // Clear existing items
+            items.forEach(item => {
+                const itemBlock = document.createElement('div');
+                itemBlock.className = 'item-block';
+                itemBlock.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="item-icon" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect fill=%22%238B4513%22 width=%2264%22 height=%2264%22/><text x=%2232%22 y=%2240%22 font-size=%2224%22 text-anchor=%22middle%22 fill=%22white%22>?</text></svg>'" />
+                    <div class="item-name">${item.name}</div>
+                    
+                `;
+                itemBlock.addEventListener('click', () => {
+                    // Get data from Google Sheet by item name
+                    const sheetData = googleSheetData[item.name];
+                    
+                    // Only show modal if data exists in Google Sheet
+                    if (sheetData && sheetData.name) {
+                        // Populate modal with Google Sheet data
+                        document.getElementById('modalItemName').textContent = sheetData.name;
+                        
+                        // Show price section if price exists and is not empty
+                        const priceSection = document.getElementById('priceSection');
+                        if (sheetData.price && sheetData.price.trim()) {
+                            document.getElementById('modalPrice').textContent = sheetData.price;
+                            priceSection.style.display = 'block';
+                        } else {
+                            priceSection.style.display = 'none';
+                        }
+                        
+                        // Always show stock
+                        document.getElementById('modalStock').textContent = sheetData.stock || 'N/A';
+                        
+                        // Show details section if details exist and are not empty
+                        const detailsSection = document.getElementById('detailsSection');
+                        if (sheetData.details && sheetData.details.trim()) {
+                            document.getElementById('modalDetails').textContent = sheetData.details;
+                            detailsSection.style.display = 'block';
+                        } else {
+                            detailsSection.style.display = 'none';
+                        }
+                        
+                        // Open modal
+                        openModal();
+                    }
+                });
+                itemsGrid.appendChild(itemBlock);
+            });
         }
 
         // Fetch Google Sheet data on page load
         fetchGoogleSheetData();
-
-        // Create shopping items grid
-        const items = [
-            { image: 'https://minecraft.wiki/images/Wither_Rose_JE1_BE1.png?05d3b&20200317232000', name: 'Wither Rose'},
-            { image: 'https://minecraft.wiki/images/Bucket_of_Axolotl_JE1_BE1.png?a9d5c', name: 'Bucket of Axolotl'},
-            { image: 'https://minecraft.wiki/images/thumb/Elytra_JE2_BE2.png/320px-Elytra_JE2_BE2.png?107c5', name: 'Elytra'},
-            { image: 'https://minecraft.wiki/images/Netherite_Ingot_JE1_BE2.png?79364', name: 'Netherite Ingot'},
-            { image: 'https://minecraft.wiki/images/Netherite_Upgrade_Smithing_Template_JE1_BE1.png?055f6', name: 'Netherite Upgrade'},
-            { image: 'https://minecraft.wiki/images/Heavy_Core_JE1_BE1.png?57df9', name: 'Heavy Core'},
-            { image: '', name: 'vacant'},
-            { image: '', name: 'vacant'},
-            { image: '', name: 'vacant'}
-        ];
-
-        // Populate items grid
-        const itemsGrid = document.getElementById('itemsGrid');
-        items.forEach(item => {
-            const itemBlock = document.createElement('div');
-            itemBlock.className = 'item-block';
-            itemBlock.innerHTML = `
-                <img src="${item.image}" alt="${item.name}" class="item-icon" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect fill=%22%238B4513%22 width=%2264%22 height=%2264%22/><text x=%2232%22 y=%2240%22 font-size=%2224%22 text-anchor=%22middle%22 fill=%22white%22>?</text></svg>'" />
-                <div class="item-name">${item.name}</div>
-                
-            `;
-            itemBlock.addEventListener('click', () => {
-                // Get data from Google Sheet by item name
-                const sheetData = googleSheetData[item.name];
-                
-                // Only show modal if data exists in Google Sheet
-                if (sheetData && sheetData.name) {
-                    // Populate modal with Google Sheet data
-                    document.getElementById('modalItemName').textContent = sheetData.name;
-                    
-                    // Show price section if price exists and is not empty
-                    const priceSection = document.getElementById('priceSection');
-                    if (sheetData.price && sheetData.price.trim()) {
-                        document.getElementById('modalPrice').textContent = sheetData.price;
-                        priceSection.style.display = 'block';
-                    } else {
-                        priceSection.style.display = 'none';
-                    }
-                    
-                    // Always show stock
-                    document.getElementById('modalStock').textContent = sheetData.stock || 'N/A';
-                    
-                    // Show description section if description exists and is not empty
-                    const descriptionSection = document.getElementById('descriptionSection');
-                    if (sheetData.description && sheetData.description.trim()) {
-                        document.getElementById('modalDescription').textContent = sheetData.description;
-                        descriptionSection.style.display = 'block';
-                    } else {
-                        descriptionSection.style.display = 'none';
-                    }
-                    
-                    // Show details section if details exist and are not empty
-                    const detailsSection = document.getElementById('detailsSection');
-                    if (sheetData.details && sheetData.details.trim()) {
-                        document.getElementById('modalDetails').textContent = sheetData.details;
-                        detailsSection.style.display = 'block';
-                    } else {
-                        detailsSection.style.display = 'none';
-                    }
-                    
-                    // Open modal
-                    openModal();
-                }
-            });
-            itemsGrid.appendChild(itemBlock);
-        });
 
         // Modal Functions
         function openModal() {
