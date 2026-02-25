@@ -619,17 +619,6 @@
 
             // Populate items grid
             const itemsGrid = document.getElementById('itemsGrid');
-            items.forEach(item => {
-        // Populate items grid from Google Sheet data
-        function populateItemsGrid() {
-            // Build items array from googleSheetData
-            const items = Object.values(googleSheetData).map(data => ({
-                image: data.image,
-                name: data.name
-            }));
-
-            // Populate items grid
-            const itemsGrid = document.getElementById('itemsGrid');
             itemsGrid.innerHTML = ''; // Clear existing items
             items.forEach(item => {
                 const itemBlock = document.createElement('div');
